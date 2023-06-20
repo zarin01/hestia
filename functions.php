@@ -186,3 +186,93 @@ function hestia_setup_theme() {
 	return;
 }
 
+
+
+
+/**
+ * Register Custom Post Type
+ */
+
+add_action( 'init', 'email_location_post_type' );
+function email_location_post_type() {
+    register_post_type('email_post_type', array(
+        'description' => 'Last Location',
+        'has_archive' => 'Locations', // The archive slug
+        'rewrite' => array('slug' => 'location_email'), // The individual Flipbook slug
+        'supports' => array('title', 'thumbnail', 'post-formats', 'page-attributes'),
+        'public' => true,
+        'show_ui' => true,
+        'exclude_from_search' => true,
+        'labels' => array(
+                'name' => 'locations',
+                'add_new' => 'Add New',
+                'add_new_item' => 'Add New Location',
+                'edit' => 'Edit',
+                'edit_item' => 'Edit Location',
+                'new_item' => 'New Location',
+                'view' => 'View Locations',
+                'view_item' => 'View Locations',
+                'search_items' => 'Search Locations',
+                'not_found' => 'No Locations found',
+                'not_found_in_trash' => 'No Locations found in Trash',
+            )
+        )
+    );
+
+
+    
+    register_taxonomy('Location-categories', array('email_post_type'), array(
+            'public' => true,
+            'labels' => array('name' => 'Location Categories', 'singular_name' => 'Location Category'),
+            'hierarchical' => true,
+            'rewrite' => array('slug' => 'Location-types')
+            )
+    );
+}
+
+
+
+
+function getProductNamesInCart()
+{
+    $productName = array();
+    foreach ( WC()->cart->get_cart() as $cart_item )
+    {
+        $item = $cart_item['data'];
+        if(!empty($item)){
+            $product = new WC_product($item->id);
+            $productName[] = $product->name;
+        }
+    }
+    return $productName;
+}
+
+
+
+///CHECKOUT LOCATIONS OPTIONS
+add_filter('woocommerce_checkout_fields', 'custom_override_checkout_fields');
+function custom_override_checkout_fields($fields)
+{
+	global $wpdb;
+
+	$pickup_locations = $wpdb->get_results("SELECT meta_value
+	FROM `wp_piskyd_postmeta`
+	WHERE (`meta_key` = 'pickup_location' OR `meta_value` = 'pickup_location')");
+
+	$all_active_locations = array();
+	foreach($pickup_locations as $location){
+		$all_active_locations[] = $location->meta_value;
+	}
+
+	$fields['billing']['pickup_location'] =  array(
+		'label'     => __('Pickup Locations', 'woocommerce'),
+		'options'   => array_combine($all_active_locations, $all_active_locations),
+		'type'      => 'select',
+		'required'  => true,
+		'class'     => array('form-row-wide'),
+		'clear'     => true,
+		'priority'  => 110,
+	);
+
+	return $fields;
+}
