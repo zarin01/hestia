@@ -41,6 +41,57 @@ do_action( 'woocommerce_email_before_order_table', $order, $sent_to_admin, $plai
 	<table class="td" cellspacing="0" cellpadding="6" style="width: 100%; font-family: 'Helvetica Neue', Helvetica, Roboto, Arial, sans-serif;" border="1">
 		<thead>
 			<tr>
+				
+
+				<p class='location_based_emails'>
+					<?php
+			
+					
+			$pickup_location = get_post_meta($order->get_id(), '_billing_pickup_location', true);
+
+			global $wpdb;
+			
+			$post_id = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT post_id 
+					FROM  `wp_piskyd_postmeta` 
+					WHERE meta_value = %s
+					AND meta_key = billing_pickup_location",
+					$pickup_location
+				)
+			);
+			
+			$email_meta_keys = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT meta_value
+					FROM  `wp_piskyd_postmeta` 
+					WHERE meta_key = 'email'
+					AND post_id = 1154",
+					$post_id
+				)
+			);
+			
+			$email_message = '';
+
+		
+			if (!empty($email_meta_keys)) {
+			    foreach ($email_meta_keys as $meta_key) {
+			        $meta_value = $meta_key->meta_value;
+			        $meta_value = str_replace("\n", "<br>", $meta_value);
+			        $email_message .= '<p style="font-size:15px">' . $meta_value . '</p>';
+			    }
+			}
+			
+
+			echo $email_message;
+			
+					
+					?>
+					</br></br>
+				</p>
+
+
+
 				<th class="td" scope="col" style="text-align:<?php echo esc_attr( $text_align ); ?>;"><?php esc_html_e( 'Product', 'woocommerce' ); ?></th>
 				<th class="td" scope="col" style="text-align:<?php echo esc_attr( $text_align ); ?>;"><?php esc_html_e( 'Quantity', 'woocommerce' ); ?></th>
 				<th class="td" scope="col" style="text-align:<?php echo esc_attr( $text_align ); ?>;"><?php esc_html_e( 'Price', 'woocommerce' ); ?></th>
@@ -70,6 +121,7 @@ do_action( 'woocommerce_email_before_order_table', $order, $sent_to_admin, $plai
 					$i++;
 					?>
 					<tr>
+					
 						<th class="td" scope="row" colspan="2" style="text-align:<?php echo esc_attr( $text_align ); ?>; <?php echo ( 1 === $i ) ? 'border-top-width: 4px;' : ''; ?>"><?php echo wp_kses_post( $total['label'] ); ?></th>
 						<td class="td" style="text-align:<?php echo esc_attr( $text_align ); ?>; <?php echo ( 1 === $i ) ? 'border-top-width: 4px;' : ''; ?>"><?php echo wp_kses_post( $total['value'] ); ?></td>
 					</tr>
@@ -79,6 +131,7 @@ do_action( 'woocommerce_email_before_order_table', $order, $sent_to_admin, $plai
 			if ( $order->get_customer_note() ) {
 				?>
 				<tr>
+				
 					<th class="td" scope="row" colspan="2" style="text-align:<?php echo esc_attr( $text_align ); ?>;"><?php esc_html_e( 'Note:', 'woocommerce' ); ?></th>
 					<td class="td" style="text-align:<?php echo esc_attr( $text_align ); ?>;"><?php echo wp_kses_post( nl2br( wptexturize( $order->get_customer_note() ) ) ); ?></td>
 				</tr>

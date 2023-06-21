@@ -249,30 +249,99 @@ function getProductNamesInCart()
 
 
 
-///CHECKOUT LOCATIONS OPTIONS
-add_filter('woocommerce_checkout_fields', 'custom_override_checkout_fields');
-function custom_override_checkout_fields($fields)
-{
+//add_filter('woocommerce_checkout_fields', 'custom_override_checkout_fields');
+//function custom_override_checkout_fields($fields)
+//{
+//    global $wpdb;
+//
+//    $pickup_locations = $wpdb->get_results("SELECT meta_value
+//    FROM `wp_piskyd_postmeta`
+//    WHERE (`meta_key` = 'billing_pickup_location')");
+//
+//    $all_active_locations = array();
+//    foreach($pickup_locations as $location){
+//        $all_active_locations[] = $location->meta_value;
+//    }
+//
+//    $fields['billing']['billing_pickup_location'] =  array(
+//        'label'     => __('Pickup Locations', 'woocommerce'),
+//        'options'   => array_combine($all_active_locations, $all_active_locations),
+//        'type'      => 'select',
+//        'required'  => true,
+//        'class'     => array('form-row-wide'),
+//        'clear'     => true,
+//        'priority'  => 110,
+//    );
+//
+//    return $fields;
+//}
+
+
+
+
+
+// Add checkout custom text fields
+add_action( 'woocommerce_before_order_notes', 'add_checkout_custom_text_fields', 20, 1 );
+function add_checkout_custom_text_fields( $checkout) {
+   
+
 	global $wpdb;
 
-	$pickup_locations = $wpdb->get_results("SELECT meta_value
-	FROM `wp_piskyd_postmeta`
-	WHERE (`meta_key` = 'pickup_location' OR `meta_value` = 'pickup_location')");
+    $pickup_locations = $wpdb->get_results("SELECT meta_value
+    FROM `wp_piskyd_postmeta`
+    WHERE (`meta_key` = 'billing_pickup_location')");
 
-	$all_active_locations = array();
-	foreach($pickup_locations as $location){
-		$all_active_locations[] = $location->meta_value;
-	}
+    $all_active_locations = array();
+    foreach($pickup_locations as $location){
+        $all_active_locations[] = $location->meta_value;
+    }
 
-	$fields['billing']['pickup_location'] =  array(
-		'label'     => __('Pickup Locations', 'woocommerce'),
-		'options'   => array_combine($all_active_locations, $all_active_locations),
-		'type'      => 'select',
-		'required'  => true,
-		'class'     => array('form-row-wide'),
-		'clear'     => true,
-		'priority'  => 110,
-	);
+        
+        
 
-	return $fields;
+            woocommerce_form_field("_billing_pickup_location", array(
+                'type'      => 'select',
+				'required'  => true,
+				'options'   => array_combine($all_active_locations, $all_active_locations),
+                'class'     => array('form-row-wide'),
+                'label'     => __('Pickup Locations', 'woocommerce'),
+				'priority'  => 110,
+            ), $checkout->get_value("_billing_pickup_location"));
+        
+    
 }
+
+
+
+
+
+// Save fields in order meta data
+add_action('woocommerce_checkout_create_order', 'save_custom_fields_to_order_meta_data', 20, 2 );
+function save_custom_fields_to_order_meta_data( $order, $data ) {
+        $order->update_meta_data( "_billing_pickup_location", esc_attr( $_POST["_billing_pickup_location"] ) );
+}
+
+
+
+
+
+// Display fields in order edit pages
+add_action('woocommerce_admin_order_data_after_billing_address','display_custom_fields_in_admin_order', 20, 1);
+function display_custom_fields_in_admin_order( $order ){
+
+            $my_field = get_post_meta($order->get_id(),"_billing_pickup_location", true );
+            if (! empty($my_field) ){
+                echo '<p><strong>'.__('Pickup Location').':</strong> ' . $my_field . '</p>';
+            }
+    }
+
+
+// Display fields in order edit pages
+add_action('woocommerce_billing_fields','display_custom_fields_in_billing_info');
+function display_custom_fields_in_billing_info( $order ){
+
+            $my_field = get_post_meta($order,"_billing_pickup_location", true );
+            if (! empty($my_field) ){
+                echo '<p><strong>'.__('Pickup Location').':</strong> ' . $my_field . '</p>';
+            }
+    }
