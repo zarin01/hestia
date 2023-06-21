@@ -248,39 +248,6 @@ function getProductNamesInCart()
 }
 
 
-
-//add_filter('woocommerce_checkout_fields', 'custom_override_checkout_fields');
-//function custom_override_checkout_fields($fields)
-//{
-//    global $wpdb;
-//
-//    $pickup_locations = $wpdb->get_results("SELECT meta_value
-//    FROM `wp_piskyd_postmeta`
-//    WHERE (`meta_key` = 'billing_pickup_location')");
-//
-//    $all_active_locations = array();
-//    foreach($pickup_locations as $location){
-//        $all_active_locations[] = $location->meta_value;
-//    }
-//
-//    $fields['billing']['billing_pickup_location'] =  array(
-//        'label'     => __('Pickup Locations', 'woocommerce'),
-//        'options'   => array_combine($all_active_locations, $all_active_locations),
-//        'type'      => 'select',
-//        'required'  => true,
-//        'class'     => array('form-row-wide'),
-//        'clear'     => true,
-//        'priority'  => 110,
-//    );
-//
-//    return $fields;
-//}
-
-
-
-
-
-// Add checkout custom text fields
 add_action( 'woocommerce_before_order_notes', 'add_checkout_custom_text_fields', 20, 1 );
 function add_checkout_custom_text_fields( $checkout) {
    
@@ -310,7 +277,6 @@ function add_checkout_custom_text_fields( $checkout) {
         
     
 }
-
 
 
 

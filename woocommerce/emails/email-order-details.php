@@ -45,48 +45,54 @@ do_action( 'woocommerce_email_before_order_table', $order, $sent_to_admin, $plai
 
 				<p class='location_based_emails'>
 					<?php
-			
+
+					$pickup_location = get_post_meta($order->get_id(), '_billing_pickup_location', true);
+
+					global $wpdb;
+
+					$post_id = $wpdb->get_results(
+						$wpdb->prepare(
+							"SELECT post_id 
+							FROM  `wp_piskyd_postmeta` 
+							WHERE meta_key = 'billing_pickup_location'
+							AND meta_value = %s",
+							$pickup_location
+						)
+					);
+
+					if (!empty($post_id)) {
+						$post_id = $post_id[0]->post_id; 
+						$email_meta_keys = $wpdb->get_results(
+							$wpdb->prepare(
+								"SELECT meta_value
+								FROM  `wp_piskyd_postmeta` 
+								WHERE meta_key = 'email'
+								AND post_id = %d",
+								$post_id
+							)
+						);
 					
-			$pickup_location = get_post_meta($order->get_id(), '_billing_pickup_location', true);
+						if (!empty($email_meta_keys)) {
+							$email_message = ''; 
+						
 
-			global $wpdb;
-			
-			$post_id = $wpdb->get_results(
-				$wpdb->prepare(
-					"SELECT post_id 
-					FROM  `wp_piskyd_postmeta` 
-					WHERE meta_value = %s
-					AND meta_key = billing_pickup_location",
-					$pickup_location
-				)
-			);
-			
-			$email_meta_keys = $wpdb->get_results(
-				$wpdb->prepare(
-					"SELECT meta_value
-					FROM  `wp_piskyd_postmeta` 
-					WHERE meta_key = 'email'
-					AND post_id = 1154",
-					$post_id
-				)
-			);
-			
-			$email_message = '';
+							foreach ($email_meta_keys as $meta_key) {
+								$meta_value = $meta_key->meta_value;
+								$meta_value = str_replace("\n", "<br>", $meta_value); 
+								$email_message .= '<p style="font-size:15px">' . $meta_value . '</p>'; 
+							}
+						
+						
+							echo $email_message;
+						
+						} else {
+								echo 'No email meta keys found for the specified post ID.';
+							}
+						} else {
+							echo 'No post ID found for the specified pickup location.';
+						}
 
-		
-			if (!empty($email_meta_keys)) {
-			    foreach ($email_meta_keys as $meta_key) {
-			        $meta_value = $meta_key->meta_value;
-			        $meta_value = str_replace("\n", "<br>", $meta_value);
-			        $email_message .= '<p style="font-size:15px">' . $meta_value . '</p>';
-			    }
-			}
-			
-
-			echo $email_message;
-			
-					
-					?>
+							?>
 					</br></br>
 				</p>
 
